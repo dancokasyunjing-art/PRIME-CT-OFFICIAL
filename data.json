@@ -1,0 +1,12 @@
+{
+  "shopName": "ARMAN GZ Official",
+  "heroTitle": "Selamat Datang di Toko ARMAN GZ Official",
+  "heroDesc": "Temukan berbagai produk & jasa dengan harga terbaik. Aman, nyaman, dan menyenangkan.",
+  "ctaText": "Belanja Sekarang",
+  "sectionTitle": "Produk Unggulan",
+  "products": [
+    { "id": 1, "name": "Produk Contoh 1", "price": "Rp 50.000", "desc": "Deskripsi singkat produk ini.", "img": null },
+    { "id": 2, "name": "Produk Contoh 2", "price": "Rp 75.000", "desc": "Deskripsi singkat produk ini.", "img": null },
+    { "id": 3, "name": "Produk Contoh 3", "price": "Rp 120.000", "desc": "Deskripsi singkat produk ini.", "img": null }
+  ]
+}
