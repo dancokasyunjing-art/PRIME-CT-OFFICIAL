@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Toko</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#0a0a12; --cyan:#3FE8E0; --pink:#ff2d78; --violet:#7b5bff;
@@ -12,200 +13,206 @@
   *{box-sizing:border-box;}
   body{ margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI', Roboto, system-ui, sans-serif; padding:20px; }
   h1{ color:var(--cyan); font-size:1.4rem; text-shadow:0 0 12px rgba(63,232,224,0.5); }
-  .note{ color:var(--muted); font-size:0.85rem; margin-bottom:20px; line-height:1.5; }
   .field{ margin-bottom:14px; }
   label{ display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px; }
-  input[type=text], textarea{
-    width:100%; background:var(--card); border:1px solid var(--border);
-    color:var(--text); border-radius:8px; padding:10px; font-size:0.9rem;
+  input[type=text], input[type=email], input[type=password], textarea{
+    width:100%; background:var(--card); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:10px; font-size:0.9rem;
   }
   textarea{ resize:vertical; min-height:50px; }
   .section-title{ color:var(--cyan); font-weight:700; margin:26px 0 10px; font-size:1.1rem; }
-  .product{
-    background:var(--card); border:1px solid var(--border); border-radius:12px;
-    padding:14px; margin-bottom:14px;
-  }
-  .product .thumb-preview{
-    width:100%; height:100px; border-radius:8px; margin-bottom:8px;
-    background:linear-gradient(135deg, rgba(63,232,224,0.18), rgba(255,45,120,0.18));
-    display:flex; align-items:center; justify-content:center; overflow:hidden;
-  }
+  .product{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; }
+  .product .thumb-preview{ width:100%; height:100px; border-radius:8px; margin-bottom:8px; background:linear-gradient(135deg, rgba(63,232,224,0.18), rgba(255,45,120,0.18)); display:flex; align-items:center; justify-content:center; overflow:hidden; }
   .product .thumb-preview img{ width:100%; height:100%; object-fit:cover; }
   .row{ display:flex; gap:8px; margin-top:8px; }
-  button{
-    border:none; border-radius:8px; padding:10px 16px; font-weight:700; cursor:pointer; font-size:0.85rem;
-  }
+  button{ border:none; border-radius:8px; padding:10px 16px; font-weight:700; cursor:pointer; font-size:0.85rem; }
   .btn-primary{ background:linear-gradient(90deg, var(--cyan), var(--violet)); color:#fff; }
   .btn-danger{ background:transparent; border:1px solid var(--border); color:#ff6b8a; }
   .btn-upload{ background:#1c1c2c; border:1px solid var(--border); color:var(--muted); }
-  .add-product{
-    width:100%; background:transparent; border:1px dashed var(--border); color:var(--cyan);
-    padding:12px; border-radius:10px; margin-bottom:20px;
-  }
-  .download-bar{
-    position:sticky; bottom:0; background:var(--bg); padding:14px 0;
-    border-top:1px solid var(--border); margin-top:20px;
-  }
-  .download-btn{
-    width:100%; background:linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
-    color:#fff; padding:14px; border-radius:30px; font-size:1rem;
-  }
-  .hint{ color:var(--muted); font-size:0.75rem; margin-top:8px; text-align:center; }
+  .add-product{ width:100%; background:transparent; border:1px dashed var(--border); color:var(--cyan); padding:12px; border-radius:10px; margin-bottom:20px; }
+  .login-box{ max-width:340px; margin:80px auto; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px; }
+  .login-box h1{ text-align:center; margin-top:0; }
+  .err{ color:#ff6b8a; font-size:0.85rem; margin-top:8px; min-height:1em; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .logout{ background:transparent; border:1px solid var(--border); color:var(--muted); padding:6px 12px; font-size:0.8rem; }
+  #adminArea{ display:none; }
+  .save-status{ text-align:center; color:var(--muted); font-size:0.78rem; padding:10px 0; }
 </style>
 </head>
 <body>
 
-<h1>Admin Toko</h1>
-<p class="note">
-  Ini halaman privat untuk mengubah isi toko. Setelah selesai edit, klik <b>"Unduh File Terbaru"</b> di bawah,
-  lalu upload file <code>data.json</code> hasil unduhan itu ke GitHub (timpa file <code>data.json</code> yang lama).
-  Jangan bagikan link halaman ini ke orang lain.
-</p>
-
-<div class="field">
-  <label>Nama Toko</label>
-  <input type="text" id="shopName">
-</div>
-<div class="field">
-  <label>Judul Utama</label>
-  <input type="text" id="heroTitle">
-</div>
-<div class="field">
-  <label>Deskripsi Singkat</label>
-  <textarea id="heroDesc"></textarea>
-</div>
-<div class="field">
-  <label>Teks Tombol Utama</label>
-  <input type="text" id="ctaText">
-</div>
-<div class="field">
-  <label>Judul Bagian Produk</label>
-  <input type="text" id="sectionTitle">
+<div class="login-box" id="loginBox">
+  <h1>Login Admin</h1>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="loginEmail">
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="loginPassword">
+  </div>
+  <button class="btn-primary" style="width:100%" id="loginBtn">Masuk</button>
+  <div class="err" id="loginErr"></div>
 </div>
 
-<div class="section-title">Produk</div>
-<div id="productList"></div>
-<button class="add-product" id="addProductBtn">+ Tambah Produk</button>
+<div id="adminArea">
+  <div class="topbar">
+    <h1 style="margin:0">Admin Toko</h1>
+    <button class="logout" id="logoutBtn">Keluar</button>
+  </div>
 
-<div class="download-bar">
-  <button class="download-btn" id="downloadBtn">⬇ Unduh File Terbaru (data.json)</button>
-  <p class="hint">Upload file ini ke GitHub untuk menerapkan perubahan ke toko publik.</p>
+  <div class="field">
+    <label>Nama Toko</label>
+    <input type="text" id="shopName">
+  </div>
+  <div class="field">
+    <label>Judul Utama</label>
+    <input type="text" id="heroTitle">
+  </div>
+  <div class="field">
+    <label>Deskripsi Singkat</label>
+    <textarea id="heroDesc"></textarea>
+  </div>
+  <div class="field">
+    <label>Teks Tombol Utama</label>
+    <input type="text" id="ctaText">
+  </div>
+  <div class="field">
+    <label>Judul Bagian Produk</label>
+    <input type="text" id="sectionTitle">
+  </div>
+  <button class="btn-primary" id="saveSettingsBtn" style="width:100%; margin-bottom:10px;">Simpan Pengaturan Toko</button>
+  <div class="save-status" id="settingsStatus"></div>
+
+  <div class="section-title">Produk</div>
+  <div id="productList"></div>
+  <button class="add-product" id="addProductBtn">+ Tambah Produk</button>
 </div>
 
 <script>
-const STORAGE_KEY = 'toko_admin_data_v1';
-let data = null;
+const SUPABASE_URL = "https://noipasfhdmrhbjqkzoxt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EKF-a5Z5NoP2Kgyqpjoosw_N4l13sjK";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function defaultData(){
-  return {
-    shopName: "ARMAN GZ Official",
-    heroTitle: "Selamat Datang di Toko ARMAN GZ Official",
-    heroDesc: "Temukan berbagai produk & jasa dengan harga terbaik. Aman, nyaman, dan menyenangkan.",
-    ctaText: "Belanja Sekarang",
-    sectionTitle: "Produk Unggulan",
-    products: [
-      { id:1, name:'Produk Contoh 1', price:'Rp 50.000', desc:'Deskripsi singkat produk ini.', img:null }
-    ]
-  };
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-async function loadInitial(){
-  const local = localStorage.getItem(STORAGE_KEY);
-  if(local){
-    data = JSON.parse(local);
-    render();
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const errBox = document.getElementById('loginErr');
+  errBox.innerText = '';
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error){
+    errBox.innerText = 'Email atau password salah.';
     return;
   }
-  try{
-    const r = await fetch('data.json');
-    data = await r.json();
-  }catch(e){
-    data = defaultData();
+  showAdmin();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  location.reload();
+});
+
+async function checkSession(){
+  const { data } = await supabase.auth.getSession();
+  if(data.session){
+    showAdmin();
   }
-  render();
 }
 
-function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+function showAdmin(){
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('adminArea').style.display = 'block';
+  loadSettings();
+  loadProducts();
 }
 
-function render(){
-  document.getElementById('shopName').value = data.shopName || '';
-  document.getElementById('heroTitle').value = data.heroTitle || '';
-  document.getElementById('heroDesc').value = data.heroDesc || '';
-  document.getElementById('ctaText').value = data.ctaText || '';
-  document.getElementById('sectionTitle').value = data.sectionTitle || '';
+async function loadSettings(){
+  const { data } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+  if(data){
+    document.getElementById('shopName').value = data.shop_name || '';
+    document.getElementById('heroTitle').value = data.hero_title || '';
+    document.getElementById('heroDesc').value = data.hero_desc || '';
+    document.getElementById('ctaText').value = data.cta_text || '';
+    document.getElementById('sectionTitle').value = data.section_title || '';
+  }
+}
 
+document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+  const status = document.getElementById('settingsStatus');
+  status.innerText = 'Menyimpan...';
+  const { error } = await supabase.from('site_settings').update({
+    shop_name: document.getElementById('shopName').value,
+    hero_title: document.getElementById('heroTitle').value,
+    hero_desc: document.getElementById('heroDesc').value,
+    cta_text: document.getElementById('ctaText').value,
+    section_title: document.getElementById('sectionTitle').value
+  }).eq('id', 1);
+  status.innerText = error ? 'Gagal menyimpan: ' + error.message : 'Tersimpan ✓';
+});
+
+async function loadProducts(){
   const list = document.getElementById('productList');
+  const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
   list.innerHTML = '';
-  data.products.forEach((p, idx) => {
+  if(!data || data.length === 0){
+    list.innerHTML = '<p style="color:var(--muted)">Belum ada produk.</p>';
+    return;
+  }
+  data.forEach(p => {
     const div = document.createElement('div');
     div.className = 'product';
     div.innerHTML = `
-      <div class="thumb-preview">${p.img ? `<img src="${p.img}">` : '🛍️'}</div>
+      <div class="thumb-preview">${p.image_url ? `<img src="${p.image_url}">` : '🛍️'}</div>
       <label>Nama Produk</label>
-      <input type="text" class="p-name" value="${escapeAttr(p.name)}">
+      <input type="text" class="p-name" value="${escapeHtml(p.name)}">
       <label>Harga</label>
-      <input type="text" class="p-price" value="${escapeAttr(p.price)}">
+      <input type="text" class="p-price" value="${escapeHtml(p.price)}">
       <label>Deskripsi</label>
-      <textarea class="p-desc">${escapeHtml(p.desc)}</textarea>
+      <textarea class="p-desc">${escapeHtml(p.description || '')}</textarea>
+      <label>URL Gambar (opsional, link gambar dari internet)</label>
+      <input type="text" class="p-img" value="${escapeHtml(p.image_url || '')}" placeholder="https://...">
       <div class="row">
-        <label class="btn-upload" style="flex:1;text-align:center;">
-          Ganti Foto
-          <input type="file" accept="image/*" class="p-file" style="display:none">
-        </label>
+        <button class="btn-primary p-save" style="flex:1">Simpan</button>
         <button class="btn-danger p-del">Hapus</button>
       </div>
+      <div class="save-status p-status"></div>
     `;
-    div.querySelector('.p-name').addEventListener('input', e => { data.products[idx].name = e.target.value; save(); });
-    div.querySelector('.p-price').addEventListener('input', e => { data.products[idx].price = e.target.value; save(); });
-    div.querySelector('.p-desc').addEventListener('input', e => { data.products[idx].desc = e.target.value; save(); });
-    div.querySelector('.p-del').addEventListener('click', () => {
-      data.products.splice(idx,1);
-      save();
-      render();
+    div.querySelector('.p-save').addEventListener('click', async () => {
+      const status = div.querySelector('.p-status');
+      status.innerText = 'Menyimpan...';
+      const { error } = await supabase.from('products').update({
+        name: div.querySelector('.p-name').value,
+        price: div.querySelector('.p-price').value,
+        description: div.querySelector('.p-desc').value,
+        image_url: div.querySelector('.p-img').value || null
+      }).eq('id', p.id);
+      status.innerText = error ? 'Gagal: ' + error.message : 'Tersimpan ✓';
+      loadProducts();
     });
-    div.querySelector('.p-file').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        data.products[idx].img = ev.target.result;
-        save();
-        render();
-      };
-      reader.readAsDataURL(file);
+    div.querySelector('.p-del').addEventListener('click', async () => {
+      if(!confirm('Hapus produk ini?')) return;
+      await supabase.from('products').delete().eq('id', p.id);
+      loadProducts();
     });
     list.appendChild(div);
   });
 }
 
-function escapeHtml(str){
-  return (str||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-function escapeAttr(str){ return escapeHtml(str); }
-
-['shopName','heroTitle','heroDesc','ctaText','sectionTitle'].forEach(id => {
-  document.getElementById(id).addEventListener('input', e => { data[id] = e.target.value; save(); });
+document.getElementById('addProductBtn').addEventListener('click', async () => {
+  await supabase.from('products').insert({
+    name: 'Produk Baru',
+    price: 'Rp 0',
+    description: 'Tulis deskripsi di sini.',
+    image_url: null
+  });
+  loadProducts();
 });
 
-document.getElementById('addProductBtn').addEventListener('click', () => {
-  data.products.push({ id: Date.now(), name:'Produk Baru', price:'Rp 0', desc:'Tulis deskripsi di sini.', img:null });
-  save();
-  render();
-});
-
-document.getElementById('downloadBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'data.json';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-loadInitial();
+checkSession();
 </script>
 
 </body>
