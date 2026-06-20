@@ -4,154 +4,116 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Toko Online</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --bg:#0a0a12;
-    --bg2:#0e0e1a;
-    --cyan:#3FE8E0;
-    --pink:#ff2d78;
-    --violet:#7b5bff;
-    --text:#eef0f5;
-    --muted:#9aa0b4;
-    --card:#13131f;
-    --border:#23233a;
+    --bg:#0a0a12; --bg2:#0e0e1a; --cyan:#3FE8E0; --pink:#ff2d78; --violet:#7b5bff;
+    --text:#eef0f5; --muted:#9aa0b4; --card:#13131f; --border:#23233a;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Segoe UI', Roboto, system-ui, sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:18px 20px;
-    border-bottom:1px solid var(--border);
-    background:linear-gradient(180deg, rgba(63,232,224,0.05), transparent);
-  }
-  #shopName{
-    font-size:1.5rem;
-    font-weight:800;
-    color:var(--cyan);
-    text-shadow:0 0 14px rgba(63,232,224,0.55);
-    letter-spacing:0.5px;
-  }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI', Roboto, system-ui, sans-serif; }
+  header{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border); }
+  #shopName{ font-size:1.5rem; font-weight:800; color:var(--cyan); text-shadow:0 0 14px rgba(63,232,224,0.55); }
   .cart{ position:relative; color:var(--cyan); font-size:1.4rem; }
-  .cart .badge{
-    position:absolute; top:-8px; right:-10px;
-    background:var(--pink); color:#fff;
-    font-size:0.7rem; font-weight:700;
-    border-radius:50%; width:18px;height:18px;
-    display:flex;align-items:center;justify-content:center;
-  }
+  .cart .badge{ position:absolute; top:-8px; right:-10px; background:var(--pink); color:#fff; font-size:0.7rem; font-weight:700; border-radius:50%; width:18px;height:18px; display:flex;align-items:center;justify-content:center; }
   .hero{ text-align:center; padding:60px 24px 40px; }
-  .hero h1{
-    font-size:2.4rem; line-height:1.15; font-weight:800;
-    margin:0 0 18px; color:#fff;
-    text-shadow:0 0 20px rgba(255,255,255,0.25);
-  }
+  .hero h1{ font-size:2.4rem; line-height:1.15; font-weight:800; margin:0 0 18px; color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.25); }
   .hero p{ color:var(--muted); font-size:1.05rem; max-width:480px; margin:0 auto 28px; }
-  .cta{
-    display:inline-block; padding:14px 36px; border-radius:40px;
-    background:linear-gradient(90deg, var(--cyan), var(--violet) 55%, var(--pink));
-    color:#fff; font-weight:700; font-size:1rem;
-    box-shadow:0 0 25px rgba(123,91,255,0.4); border:none; cursor:pointer;
-  }
-  .section-title{
-    text-align:center; color:var(--cyan); font-size:1.8rem; font-weight:800;
-    text-shadow:0 0 16px rgba(63,232,224,0.5); margin:50px 0 26px;
-  }
-  .grid{
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
-    gap:18px; padding:0 20px 60px; max-width:1100px; margin:0 auto;
-  }
-  .product{
-    background:var(--card); border:1px solid var(--border); border-radius:14px;
-    overflow:hidden; display:flex; flex-direction:column;
-    transition:transform .15s, box-shadow .15s;
-  }
-  .product:hover{ transform:translateY(-4px); box-shadow:0 8px 24px rgba(123,91,255,0.25); }
-  .product .thumb{
-    height:140px;
-    background:linear-gradient(135deg, rgba(63,232,224,0.18), rgba(255,45,120,0.18));
-    display:flex; align-items:center; justify-content:center;
-    font-size:2.2rem; color:var(--muted);
-  }
+  .cta{ display:inline-block; padding:14px 36px; border-radius:40px; background:linear-gradient(90deg, var(--cyan), var(--violet) 55%, var(--pink)); color:#fff; font-weight:700; font-size:1rem; box-shadow:0 0 25px rgba(123,91,255,0.4); border:none; cursor:pointer; }
+  .section-title{ text-align:center; color:var(--cyan); font-size:1.8rem; font-weight:800; text-shadow:0 0 16px rgba(63,232,224,0.5); margin:50px 0 26px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:18px; padding:0 20px 60px; max-width:1100px; margin:0 auto; }
+  .product{ background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; }
+  .product .thumb{ height:140px; background:linear-gradient(135deg, rgba(63,232,224,0.18), rgba(255,45,120,0.18)); display:flex; align-items:center; justify-content:center; font-size:2.2rem; color:var(--muted); }
   .product .thumb img{ width:100%; height:100%; object-fit:cover; }
   .product .body{ padding:14px 14px 16px; flex:1; display:flex; flex-direction:column; gap:6px; }
   .product .name{ font-weight:700; font-size:1rem; }
   .product .price{ color:var(--pink); font-weight:700; font-size:0.95rem; }
   .product .desc{ color:var(--muted); font-size:0.85rem; flex:1; }
   .product .row{ display:flex; gap:8px; margin-top:8px; }
-  .product .add-btn{
-    flex:1; background:linear-gradient(90deg, var(--cyan), var(--violet));
-    border:none; color:#fff; font-weight:700; padding:8px 0;
-    border-radius:8px; cursor:pointer; font-size:0.85rem;
-  }
+  .product .add-btn{ flex:1; background:linear-gradient(90deg, var(--cyan), var(--violet)); border:none; color:#fff; font-weight:700; padding:8px 0; border-radius:8px; cursor:pointer; font-size:0.85rem; }
+  .empty{ text-align:center; color:var(--muted); padding:40px; }
   .footer-note{ text-align:center; color:var(--muted); font-size:0.78rem; padding-bottom:30px; opacity:0.6; }
 </style>
 </head>
 <body>
 
 <header>
-  <div id="shopName"></div>
+  <div id="shopName">Memuat...</div>
   <div class="cart">🛒<span class="badge" id="cartCount">0</span></div>
 </header>
 
 <section class="hero">
   <h1 id="heroTitle"></h1>
   <p id="heroDesc"></p>
-  <button class="cta" id="ctaBtn"></button>
+  <button class="cta" id="ctaBtn" onclick="document.getElementById('productGrid').scrollIntoView({behavior:'smooth'})"></button>
 </section>
 
 <h2 class="section-title" id="sectionTitle"></h2>
 
-<div class="grid" id="productGrid"></div>
+<div class="grid" id="productGrid"><p class="empty">Memuat produk...</p></div>
 
 <p class="footer-note">Dibuat dengan ❤ — toko online</p>
 
 <script>
+// === GANTI DUA BARIS INI SESUAI PROJECT SUPABASE KAMU ===
+const SUPABASE_URL = "https://noipasfhdmrhbjqkzoxt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EKF-a5Z5NoP2Kgyqpjoosw_N4l13sjK";
+// === NOMOR WHATSAPP KAMU (format: 62xxxxxxxxxx, tanpa + atau 0 di depan) ===
+const WA_NUMBER = "6281234567890";
+// ==========================================================
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let cart = 0;
-
-fetch('data.json')
-  .then(r => r.json())
-  .then(data => {
-    document.getElementById('shopName').innerText = data.shopName;
-    document.getElementById('heroTitle').innerText = data.heroTitle;
-    document.getElementById('heroDesc').innerText = data.heroDesc;
-    document.getElementById('ctaBtn').innerText = data.ctaText;
-    document.getElementById('sectionTitle').innerText = data.sectionTitle;
-
-    const grid = document.getElementById('productGrid');
-    data.products.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'product';
-      card.innerHTML = `
-        <div class="thumb">${p.img ? `<img src="${p.img}" alt="">` : '🛍️'}</div>
-        <div class="body">
-          <div class="name">${escapeHtml(p.name)}</div>
-          <div class="price">${escapeHtml(p.price)}</div>
-          <div class="desc">${escapeHtml(p.desc)}</div>
-          <div class="row"><button class="add-btn">Tambah ke Keranjang</button></div>
-        </div>
-      `;
-      card.querySelector('.add-btn').addEventListener('click', () => {
-        cart++;
-        document.getElementById('cartCount').innerText = cart;
-      });
-      grid.appendChild(card);
-    });
-  })
-  .catch(() => {
-    document.getElementById('shopName').innerText = 'Toko Online';
-  });
 
 function escapeHtml(str){
   return (str||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
+
+async function loadSettings(){
+  const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+  if(data){
+    document.getElementById('shopName').innerText = data.shop_name || 'Toko Online';
+    document.getElementById('heroTitle').innerText = data.hero_title || '';
+    document.getElementById('heroDesc').innerText = data.hero_desc || '';
+    document.getElementById('ctaBtn').innerText = data.cta_text || 'Belanja Sekarang';
+    document.getElementById('sectionTitle').innerText = data.section_title || 'Produk';
+  } else {
+    document.getElementById('shopName').innerText = 'Toko Online';
+  }
+}
+
+async function loadProducts(){
+  const grid = document.getElementById('productGrid');
+  const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
+  if(error || !data || data.length === 0){
+    grid.innerHTML = '<p class="empty">Belum ada produk.</p>';
+    return;
+  }
+  grid.innerHTML = '';
+  data.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'product';
+    card.innerHTML = `
+      <div class="thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛍️'}</div>
+      <div class="body">
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="price">${escapeHtml(p.price)}</div>
+        <div class="desc">${escapeHtml(p.description || '')}</div>
+        <div class="row"><button class="add-btn">Beli via WhatsApp</button></div>
+      </div>
+    `;
+    card.querySelector('.add-btn').addEventListener('click', () => {
+      cart++;
+      document.getElementById('cartCount').innerText = cart;
+      const msg = encodeURIComponent(`Halo, saya mau pesan produk: ${p.name} (${p.price})`);
+      window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+    });
+    grid.appendChild(card);
+  });
+}
+
+loadSettings();
+loadProducts();
 </script>
 
 </body>
