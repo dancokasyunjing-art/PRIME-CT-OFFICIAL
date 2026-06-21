@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Toko Online</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#0a0a12; --bg2:#0e0e1a; --cyan:#3FE8E0; --pink:#ff2d78; --violet:#7b5bff;
@@ -31,7 +30,7 @@
   .product .desc{ color:var(--muted); font-size:0.85rem; flex:1; }
   .product .row{ display:flex; gap:8px; margin-top:8px; }
   .product .add-btn{ flex:1; background:linear-gradient(90deg, var(--cyan), var(--violet)); border:none; color:#fff; font-weight:700; padding:8px 0; border-radius:8px; cursor:pointer; font-size:0.85rem; }
-  .empty{ text-align:center; color:var(--muted); padding:40px; }
+  .empty{ text-align:center; color:var(--muted); padding:40px; grid-column:1/-1; }
   .footer-note{ text-align:center; color:var(--muted); font-size:0.78rem; padding-bottom:30px; opacity:0.6; }
 </style>
 </head>
@@ -62,7 +61,6 @@ const SUPABASE_KEY = "sb_publishable_EKF-a5Z5NoP2Kgyqpjoosw_N4l13sjK";
 const WA_NUMBER = "6281234567890";
 // ==========================================================
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let cart = 0;
 
 function escapeHtml(str){
@@ -70,42 +68,40 @@ function escapeHtml(str){
 }
 
 async function loadSettings(){
+  const elShop = document.getElementById('shopName');
   try{
-    if(!window.supabase){
-      document.getElementById('shopName').innerText = 'Error: skrip Supabase gagal dimuat';
+    const url = `${SUPABASE_URL}/rest/v1/site_settings?select=*&id=eq.1&apikey=${SUPABASE_KEY}`;
+    const res = await fetch(url);
+    if(!res.ok){
+      elShop.innerText = 'Error memuat (HTTP ' + res.status + ')';
       return;
     }
-    const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).single();
-    if(error){
-      document.getElementById('shopName').innerText = 'Error: ' + error.message;
-      return;
-    }
+    const arr = await res.json();
+    const data = arr && arr[0];
     if(data){
-      document.getElementById('shopName').innerText = data.shop_name || 'Toko Online';
+      elShop.innerText = data.shop_name || 'Toko Online';
       document.getElementById('heroTitle').innerText = data.hero_title || '';
       document.getElementById('heroDesc').innerText = data.hero_desc || '';
       document.getElementById('ctaBtn').innerText = data.cta_text || 'Belanja Sekarang';
       document.getElementById('sectionTitle').innerText = data.section_title || 'Produk';
     } else {
-      document.getElementById('shopName').innerText = 'Toko Online';
+      elShop.innerText = 'Toko Online';
     }
   }catch(e){
-    document.getElementById('shopName').innerText = 'Error JS: ' + e.message;
+    elShop.innerText = 'Error koneksi: ' + e.message;
   }
 }
 
 async function loadProducts(){
   const grid = document.getElementById('productGrid');
   try{
-    if(!window.supabase){
-      grid.innerHTML = '<p class="empty">Error: skrip Supabase gagal dimuat (cek koneksi internet/browser)</p>';
+    const url = `${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.asc&apikey=${SUPABASE_KEY}`;
+    const res = await fetch(url);
+    if(!res.ok){
+      grid.innerHTML = '<p class="empty">Error memuat produk (HTTP ' + res.status + ')</p>';
       return;
     }
-    const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
-    if(error){
-      grid.innerHTML = '<p class="empty">Error: ' + error.message + '</p>';
-      return;
-    }
+    const data = await res.json();
     if(!data || data.length === 0){
       grid.innerHTML = '<p class="empty">Belum ada produk.</p>';
       return;
@@ -132,7 +128,7 @@ async function loadProducts(){
       grid.appendChild(card);
     });
   }catch(e){
-    grid.innerHTML = '<p class="empty">Error JS: ' + e.message + '</p>';
+    grid.innerHTML = '<p class="empty">Error koneksi: ' + e.message + '</p>';
   }
 }
 
