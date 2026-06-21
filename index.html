@@ -59,7 +59,7 @@
 const SUPABASE_URL = "https://noipasfhdmrhbjqkzoxt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_EKF-a5Z5NoP2Kgyqpjoosw_N4l13sjK";
 // === NOMOR WHATSAPP KAMU (format: 62xxxxxxxxxx, tanpa + atau 0 di depan) ===
-const WA_NUMBER = "6285881442180";
+const WA_NUMBER = "6281234567890";
 // ==========================================================
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -70,46 +70,70 @@ function escapeHtml(str){
 }
 
 async function loadSettings(){
-  const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).single();
-  if(data){
-    document.getElementById('shopName').innerText = data.shop_name || 'Toko Online';
-    document.getElementById('heroTitle').innerText = data.hero_title || '';
-    document.getElementById('heroDesc').innerText = data.hero_desc || '';
-    document.getElementById('ctaBtn').innerText = data.cta_text || 'Belanja Sekarang';
-    document.getElementById('sectionTitle').innerText = data.section_title || 'Produk';
-  } else {
-    document.getElementById('shopName').innerText = 'Toko Online';
+  try{
+    if(!window.supabase){
+      document.getElementById('shopName').innerText = 'Error: skrip Supabase gagal dimuat';
+      return;
+    }
+    const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+    if(error){
+      document.getElementById('shopName').innerText = 'Error: ' + error.message;
+      return;
+    }
+    if(data){
+      document.getElementById('shopName').innerText = data.shop_name || 'Toko Online';
+      document.getElementById('heroTitle').innerText = data.hero_title || '';
+      document.getElementById('heroDesc').innerText = data.hero_desc || '';
+      document.getElementById('ctaBtn').innerText = data.cta_text || 'Belanja Sekarang';
+      document.getElementById('sectionTitle').innerText = data.section_title || 'Produk';
+    } else {
+      document.getElementById('shopName').innerText = 'Toko Online';
+    }
+  }catch(e){
+    document.getElementById('shopName').innerText = 'Error JS: ' + e.message;
   }
 }
 
 async function loadProducts(){
   const grid = document.getElementById('productGrid');
-  const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
-  if(error || !data || data.length === 0){
-    grid.innerHTML = '<p class="empty">Belum ada produk.</p>';
-    return;
-  }
-  grid.innerHTML = '';
-  data.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'product';
-    card.innerHTML = `
-      <div class="thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛍️'}</div>
-      <div class="body">
-        <div class="name">${escapeHtml(p.name)}</div>
-        <div class="price">${escapeHtml(p.price)}</div>
-        <div class="desc">${escapeHtml(p.description || '')}</div>
-        <div class="row"><button class="add-btn">Beli via WhatsApp</button></div>
-      </div>
-    `;
-    card.querySelector('.add-btn').addEventListener('click', () => {
-      cart++;
-      document.getElementById('cartCount').innerText = cart;
-      const msg = encodeURIComponent(`Halo, saya mau pesan produk: ${p.name} (${p.price})`);
-      window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+  try{
+    if(!window.supabase){
+      grid.innerHTML = '<p class="empty">Error: skrip Supabase gagal dimuat (cek koneksi internet/browser)</p>';
+      return;
+    }
+    const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
+    if(error){
+      grid.innerHTML = '<p class="empty">Error: ' + error.message + '</p>';
+      return;
+    }
+    if(!data || data.length === 0){
+      grid.innerHTML = '<p class="empty">Belum ada produk.</p>';
+      return;
+    }
+    grid.innerHTML = '';
+    data.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'product';
+      card.innerHTML = `
+        <div class="thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛍️'}</div>
+        <div class="body">
+          <div class="name">${escapeHtml(p.name)}</div>
+          <div class="price">${escapeHtml(p.price)}</div>
+          <div class="desc">${escapeHtml(p.description || '')}</div>
+          <div class="row"><button class="add-btn">Beli via WhatsApp</button></div>
+        </div>
+      `;
+      card.querySelector('.add-btn').addEventListener('click', () => {
+        cart++;
+        document.getElementById('cartCount').innerText = cart;
+        const msg = encodeURIComponent(`Halo, saya mau pesan produk: ${p.name} (${p.price})`);
+        window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+      });
+      grid.appendChild(card);
     });
-    grid.appendChild(card);
-  });
+  }catch(e){
+    grid.innerHTML = '<p class="empty">Error JS: ' + e.message + '</p>';
+  }
 }
 
 loadSettings();
